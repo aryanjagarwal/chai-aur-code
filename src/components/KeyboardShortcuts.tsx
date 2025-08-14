@@ -29,7 +29,6 @@ const KeyboardShortcuts = ({ isOpen, onClose }: KeyboardShortcutsProps) => {
         { keys: ['Shift', 'Enter'], description: 'New line in message', category: 'Chat' },
         { keys: ['Ctrl', 'Enter'], description: 'Send message (alternative)', category: 'Chat' },
         { keys: ['Ctrl', 'T'], description: 'Open message templates', category: 'Chat' },
-        { keys: ['Ctrl', 'M'], description: 'Toggle voice input', category: 'Chat' },
 
         // Actions
         { keys: ['Ctrl', 'S'], description: 'Export current chat', category: 'Actions' },

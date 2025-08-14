@@ -6,7 +6,6 @@ interface KeyboardShortcutHandlers {
     onSearch?: () => void;
     onExport?: () => void;
     onTemplates?: () => void;
-    onVoiceToggle?: () => void;
     onClearChat?: () => void;
     onClearAllHistory?: () => void;
     onShowShortcuts?: () => void;
@@ -65,11 +64,6 @@ export const useKeyboardShortcuts = (handlers: KeyboardShortcutHandlers) => {
                 case isCtrl && key === 't':
                     shouldPreventDefault();
                     handlers.onTemplates?.();
-                    break;
-
-                case isCtrl && key === 'm':
-                    shouldPreventDefault();
-                    handlers.onVoiceToggle?.();
                     break;
 
                 // Action shortcuts

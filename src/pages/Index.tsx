@@ -21,14 +21,22 @@ const Index = () => {
   const [openaiKey, setOpenaiKey] = useState<string>("");
   const [geminiKey, setGeminiKey] = useState<string>("");
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(true);
-  const [lastUsedProvider, setLastUsedProvider] = useState<'openai' | 'gemini' | null>(null);
+  const [lastUsedProvider, setLastUsedProvider] = useState<
+    "openai" | "gemini" | null
+  >(null);
   const [showSidebar, setShowSidebar] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
-  const [messageReactions, setMessageReactions] = useState<{ [key: string]: { [key: string]: number } }>({});
-  const [bookmarkedMessages, setBookmarkedMessages] = useState<Set<string>>(new Set());
+  const [messageReactions, setMessageReactions] = useState<{
+    [key: string]: { [key: string]: number };
+  }>({});
+  const [bookmarkedMessages, setBookmarkedMessages] = useState<Set<string>>(
+    new Set()
+  );
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageIdCounter = useRef(0);
+  const sequenceCounter = useRef(0);
   const { toast } = useToast();
 
   const {
@@ -39,7 +47,7 @@ const Index = () => {
     updateSession,
     deleteSession,
     getCurrentSession,
-    clearAllSessions
+    clearAllSessions,
   } = useChatHistory();
 
   const scrollToBottom = () => {
@@ -81,15 +89,15 @@ const Index = () => {
     }
   }, []);
 
-  // Load current session messages
-  useEffect(() => {
-    const currentSession = getCurrentSession();
-    if (currentSession) {
-      setMessages(currentSession.messages);
-    } else {
-      setMessages([]);
-    }
-  }, [currentSessionId, getCurrentSession]);
+  // Disable session loading for now to fix the core issue
+  // useEffect(() => {
+  //   const currentSession = getCurrentSession();
+  //   if (currentSession) {
+  //     setMessages(currentSession.messages);
+  //   } else {
+  //     setMessages([]);
+  //   }
+  // }, [currentSessionId]);
 
   // Save reactions to localStorage
   useEffect(() => {
@@ -98,7 +106,10 @@ const Index = () => {
 
   // Save bookmarks to localStorage
   useEffect(() => {
-    localStorage.setItem("bookmarked_messages", JSON.stringify([...bookmarkedMessages]));
+    localStorage.setItem(
+      "bookmarked_messages",
+      JSON.stringify([...bookmarkedMessages])
+    );
   }, [bookmarkedMessages]);
 
   const handleApiKeySubmit = (newOpenaiKey: string, newGeminiKey?: string) => {
@@ -110,8 +121,12 @@ const Index = () => {
 
     setShowApiKeyDialog(false);
 
-    const providerText = newOpenaiKey && newGeminiKey ? "both OpenAI and Gemini" :
-      newOpenaiKey ? "OpenAI" : "Gemini";
+    const providerText =
+      newOpenaiKey && newGeminiKey
+        ? "both OpenAI and Gemini"
+        : newOpenaiKey
+        ? "OpenAI"
+        : "Gemini";
 
     toast({
       title: "API Keys Saved",
@@ -119,51 +134,52 @@ const Index = () => {
     });
   };
 
+  // Generate unique message ID
+  const generateMessageId = (): string => {
+    messageIdCounter.current += 1;
+    return `msg_${Date.now()}_${messageIdCounter.current}`;
+  };
+
+  // Clean addMessage function
   const addMessage = (content: string, isUser: boolean): Message => {
+    sequenceCounter.current += 1;
     const message: Message = {
-      id: Date.now().toString(),
+      id: generateMessageId(),
       content,
       isUser,
       timestamp: new Date(),
+      sequence: sequenceCounter.current,
     };
-    const newMessages = [...messages, message];
-    setMessages(newMessages);
 
-    // Update current session or create new one
-    if (currentSessionId) {
-      updateSession(currentSessionId, newMessages);
-    } else if (newMessages.length === 1) {
-      // Create new session for first message
-      const sessionId = createNewSession();
-      updateSession(sessionId, newMessages);
-    }
-
+    setMessages((prevMessages) => [...prevMessages, message]);
     return message;
   };
 
   const handleNewChat = () => {
-    const sessionId = createNewSession();
+    messageIdCounter.current = 0;
+    sequenceCounter.current = 0;
     setMessages([]);
     setShowSidebar(false);
   };
 
   const handleLoadChat = (sessionId: string) => {
-    setCurrentSessionId(sessionId);
+    // Disabled for now
+    // setCurrentSessionId(sessionId);
     setShowSidebar(false);
   };
 
   const handleMessageReaction = (messageId: string, reaction: string) => {
-    setMessageReactions(prev => ({
+    setMessageReactions((prev) => ({
       ...prev,
       [messageId]: {
         ...prev[messageId],
-        [reaction]: (prev[messageId]?.[reaction] || 0) + 1
-      }
+        [reaction]: (prev[messageId]?.[reaction] || 0) + 1,
+      },
     }));
   };
 
   const handleBookmarkMessage = (messageId: string) => {
-    setBookmarkedMessages(prev => {
+    setBookmarkedMessages((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(messageId)) {
         newSet.delete(messageId);
@@ -177,10 +193,10 @@ const Index = () => {
   const handleMessageSelect = (messageId: string) => {
     const messageElement = document.getElementById(`message-${messageId}`);
     if (messageElement) {
-      messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      messageElement.classList.add('highlight-message');
+      messageElement.scrollIntoView({ behavior: "smooth", block: "center" });
+      messageElement.classList.add("highlight-message");
       setTimeout(() => {
-        messageElement.classList.remove('highlight-message');
+        messageElement.classList.remove("highlight-message");
       }, 2000);
     }
   };
@@ -222,20 +238,23 @@ const Index = () => {
       return;
     }
 
-    // Add user message
-    addMessage(messageText, true);
+    // Add user message using the addMessage function
+    const userMessage = addMessage(messageText, true);
     setIsLoading(true);
 
     try {
       const result = await sendChatMessage(messageText, openaiKey, geminiKey);
+
+      // Add AI message using the addMessage function
       addMessage(result.response, false);
       setLastUsedProvider(result.usedProvider);
 
       // Show notification if fallback was used
-      if (result.usedProvider === 'gemini' && openaiKey) {
+      if (result.usedProvider === "gemini" && openaiKey) {
         toast({
           title: "Using Gemini Fallback",
-          description: "OpenAI quota exceeded, switched to Gemini automatically.",
+          description:
+            "OpenAI quota exceeded, switched to Gemini automatically.",
         });
       }
     } catch (error) {
@@ -243,7 +262,10 @@ const Index = () => {
 
       let errorMessage = "Sorry, I couldn't process your message right now.";
       if (error instanceof Error) {
-        if (error.message.includes("API key") || error.message.includes("Both AI services")) {
+        if (
+          error.message.includes("API key") ||
+          error.message.includes("Both AI services")
+        ) {
           errorMessage = error.message;
           setShowApiKeyDialog(true);
         } else {
@@ -283,7 +305,10 @@ const Index = () => {
             <div className="flex items-center justify-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               <span className="font-medium text-muted-foreground">
-                Powered by {lastUsedProvider === 'openai' ? 'OpenAI GPT-4' : 'Google Gemini'}
+                Powered by{" "}
+                {lastUsedProvider === "openai"
+                  ? "OpenAI GPT-4"
+                  : "Google Gemini"}
               </span>
             </div>
           </div>
@@ -296,24 +321,26 @@ const Index = () => {
             </div>
           ) : (
             <div className="space-y-2 pb-8">
-              {messages.map((message, index) => (
-                <div
-                  key={message.id}
-                  className="animate-slide-up"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  <ChatMessage
-                    message={message.content}
-                    isUser={message.isUser}
-                    timestamp={message.timestamp}
-                    messageId={message.id}
-                    onReaction={handleMessageReaction}
-                    onBookmark={handleBookmarkMessage}
-                    reactions={messageReactions[message.id]}
-                    isBookmarked={bookmarkedMessages.has(message.id)}
-                  />
-                </div>
-              ))}
+              {messages
+                .sort((a, b) => a.sequence - b.sequence)
+                .map((message, index) => (
+                  <div
+                    key={message.id}
+                    className="animate-slide-up"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <ChatMessage
+                      message={message.content}
+                      isUser={message.isUser}
+                      timestamp={message.timestamp}
+                      messageId={message.id}
+                      onReaction={handleMessageReaction}
+                      onBookmark={handleBookmarkMessage}
+                      reactions={messageReactions[message.id]}
+                      isBookmarked={bookmarkedMessages.has(message.id)}
+                    />
+                  </div>
+                ))}
               {isLoading && <TypingIndicator />}
               <div ref={messagesEndRef} />
             </div>

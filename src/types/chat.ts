@@ -3,6 +3,7 @@ export interface Message {
   content: string;
   isUser: boolean;
   timestamp: Date;
+  sequence: number;
 }
 
 export interface ChatState {

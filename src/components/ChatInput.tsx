@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Loader2, Sparkles, Coffee, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
-import VoiceInput from "./VoiceInput";
 import MessageTemplates from "./MessageTemplates";
 
 interface ChatInputProps {
@@ -14,7 +13,6 @@ interface ChatInputProps {
 const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
   const [message, setMessage] = useState("");
   const [showTemplates, setShowTemplates] = useState(false);
-  const [isListening, setIsListening] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,9 +29,7 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
     }
   };
 
-  const handleVoiceTranscript = (transcript: string) => {
-    setMessage(prev => prev + (prev ? ' ' : '') + transcript);
-  };
+
 
   const handleTemplateSelect = (templateContent: string) => {
     setMessage(templateContent);
@@ -86,24 +82,14 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
               onKeyDown={handleKeyDown}
               placeholder="Namaste! Ask Hitesh anything about coding, career, or technology..."
               className={cn(
-                "min-h-[60px] max-h-40 resize-none pl-10 pr-16 py-3",
+                "min-h-[60px] max-h-40 resize-none pl-10 pr-4 py-3",
                 "border-border/50 focus:border-primary/50 focus:ring-primary/20",
                 "bg-background/80 backdrop-blur-sm",
                 "transition-all duration-300 rounded-xl",
-                "placeholder:text-muted-foreground/70",
-                isListening && "ring-2 ring-red-500/50 border-red-500/50"
+                "placeholder:text-muted-foreground/70"
               )}
               disabled={isLoading}
             />
-
-            {/* Voice Input Button */}
-            <div className="absolute right-3 top-3">
-              <VoiceInput
-                onTranscript={handleVoiceTranscript}
-                isListening={isListening}
-                onListeningChange={setIsListening}
-              />
-            </div>
 
             <div className="absolute bottom-2 right-2 text-xs text-muted-foreground">
               {message.length}/1000
@@ -140,9 +126,6 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
         <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
           <div className="flex items-center gap-4">
             <span>Press Enter to send, Shift+Enter for new line</span>
-            {isListening && (
-              <span className="text-red-500 animate-pulse">🎤 Listening...</span>
-            )}
           </div>
           <div className="flex items-center gap-1">
             <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
