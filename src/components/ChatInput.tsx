@@ -4,13 +4,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Send, Loader2, Sparkles, Coffee, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import MessageTemplates from "./MessageTemplates";
+import PersonaSelector from "./PersonaSelector";
+import { PersonaId } from "@/types/persona";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
   isLoading: boolean;
+  currentPersona: PersonaId;
+  onPersonaChange: (personaId: PersonaId) => void;
 }
 
-const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
+const ChatInput = ({ onSendMessage, isLoading, currentPersona, onPersonaChange }: ChatInputProps) => {
   const [message, setMessage] = useState("");
   const [showTemplates, setShowTemplates] = useState(false);
 
@@ -45,8 +49,16 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
   return (
     <div className="border-t border-border/50 bg-gradient-to-t from-background via-background/98 to-background/95 backdrop-blur-md">
       <div className="max-w-4xl mx-auto p-6">
-        {/* Quick Prompts */}
+        {/* Quick Prompts and Persona Selector */}
         <div className="mb-4 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          {/* Persona Selector */}
+          <PersonaSelector
+            currentPersonaId={currentPersona}
+            onPersonaChange={onPersonaChange}
+            className="shrink-0"
+            compact={true}
+          />
+
           <Button
             variant="outline"
             size="sm"
@@ -80,7 +92,11 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Namaste! Ask Hitesh anything about coding, career, or technology..."
+              placeholder={
+                currentPersona === 'hitesh'
+                  ? "Namaste! Ask Hitesh anything about coding, career, or technology..."
+                  : "Hey! Ask Piyush about full-stack development, projects, or tech..."
+              }
               className={cn(
                 "min-h-[60px] max-h-40 resize-none pl-10 pr-4 py-3",
                 "border-border/50 focus:border-primary/50 focus:ring-primary/20",

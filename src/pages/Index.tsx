@@ -10,8 +10,10 @@ import ChatSidebar from "@/components/ChatSidebar";
 import MessageSearch from "@/components/MessageSearch";
 import ExportChat from "@/components/ExportChat";
 import KeyboardShortcuts from "@/components/KeyboardShortcuts";
+import PersonaSelector from "@/components/PersonaSelector";
 import { sendChatMessage } from "@/services/openai";
 import { Message } from "@/types/chat";
+import { PersonaId } from "@/types/persona";
 import { useChatHistory } from "@/hooks/useChatHistory";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 
@@ -28,6 +30,7 @@ const Index = () => {
   const [showSearch, setShowSearch] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [currentPersona, setCurrentPersona] = useState<PersonaId>("hitesh");
   const [messageReactions, setMessageReactions] = useState<{
     [key: string]: { [key: string]: number };
   }>({});
@@ -67,6 +70,15 @@ const Index = () => {
       setOpenaiKey(storedOpenaiKey || "");
       setGeminiKey(storedGeminiKey || "");
       setShowApiKeyDialog(false);
+    }
+
+    // Load persona preference from localStorage
+    const storedPersona = localStorage.getItem("selected_persona") as PersonaId;
+    if (
+      storedPersona &&
+      (storedPersona === "hitesh" || storedPersona === "piyush")
+    ) {
+      setCurrentPersona(storedPersona);
     }
 
     // Load reactions and bookmarks from localStorage
@@ -141,7 +153,11 @@ const Index = () => {
   };
 
   // Clean addMessage function
-  const addMessage = (content: string, isUser: boolean): Message => {
+  const addMessage = (
+    content: string,
+    isUser: boolean,
+    personaId?: PersonaId
+  ): Message => {
     sequenceCounter.current += 1;
     const message: Message = {
       id: generateMessageId(),
@@ -149,10 +165,23 @@ const Index = () => {
       isUser,
       timestamp: new Date(),
       sequence: sequenceCounter.current,
+      personaId: !isUser ? personaId || currentPersona : undefined, // Store persona only for AI messages
     };
 
     setMessages((prevMessages) => [...prevMessages, message]);
     return message;
+  };
+
+  const handlePersonaChange = (personaId: PersonaId) => {
+    setCurrentPersona(personaId);
+    localStorage.setItem("selected_persona", personaId);
+
+    toast({
+      title: "AI Mentor Changed",
+      description: `Switched to ${
+        personaId === "hitesh" ? "Hitesh Choudhary" : "Piyush Garg"
+      }. Your conversation continues with the new mentor.`,
+    });
   };
 
   const handleNewChat = () => {
@@ -243,10 +272,15 @@ const Index = () => {
     setIsLoading(true);
 
     try {
-      const result = await sendChatMessage(messageText, openaiKey, geminiKey);
+      const result = await sendChatMessage(
+        messageText,
+        openaiKey,
+        geminiKey,
+        currentPersona
+      );
 
-      // Add AI message using the addMessage function
-      addMessage(result.response, false);
+      // Add AI message using the addMessage function with current persona
+      addMessage(result.response, false, currentPersona);
       setLastUsedProvider(result.usedProvider);
 
       // Show notification if fallback was used
@@ -294,6 +328,7 @@ const Index = () => {
 
       <div className="relative z-10 flex flex-col min-h-screen">
         <ChatHeader
+          currentPersona={currentPersona}
           onToggleSidebar={() => setShowSidebar(!showSidebar)}
           onToggleSearch={() => setShowSearch(true)}
           onToggleExport={() => setShowExport(true)}
@@ -317,7 +352,7 @@ const Index = () => {
         <div className="flex-1 overflow-y-auto">
           {messages.length === 0 ? (
             <div className="animate-fade-in">
-              <WelcomeMessage />
+              <WelcomeMessage currentPersona={currentPersona} />
             </div>
           ) : (
             <div className="space-y-2 pb-8">
@@ -338,16 +373,25 @@ const Index = () => {
                       onBookmark={handleBookmarkMessage}
                       reactions={messageReactions[message.id]}
                       isBookmarked={bookmarkedMessages.has(message.id)}
+                      messagePersonaId={message.personaId}
+                      currentPersona={currentPersona}
                     />
                   </div>
                 ))}
-              {isLoading && <TypingIndicator />}
+              {isLoading && <TypingIndicator currentPersona={currentPersona} />}
               <div ref={messagesEndRef} />
             </div>
           )}
         </div>
 
-        <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+        <div className="relative">
+          <ChatInput
+            onSendMessage={handleSendMessage}
+            isLoading={isLoading}
+            currentPersona={currentPersona}
+            onPersonaChange={handlePersonaChange}
+          />
+        </div>
 
         <ApiKeyDialog
           open={showApiKeyDialog}
@@ -368,6 +412,7 @@ const Index = () => {
           isOpen={showSearch}
           onClose={() => setShowSearch(false)}
           onMessageSelect={handleMessageSelect}
+          currentPersona={currentPersona}
         />
 
         {/* Export Modal */}
@@ -375,6 +420,7 @@ const Index = () => {
           messages={messages}
           isOpen={showExport}
           onClose={() => setShowExport(false)}
+          currentPersona={currentPersona}
         />
 
         {/* Keyboard Shortcuts Modal */}

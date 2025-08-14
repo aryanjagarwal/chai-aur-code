@@ -2,41 +2,88 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Code, BookOpen, Users, Zap, Coffee, Star, Play, Github, Youtube } from "lucide-react";
+import { getPersonaById } from "@/data/personas";
+import { PersonaId } from "@/types/persona";
+import { cn } from "@/lib/utils";
 
-const WelcomeMessage = () => {
-  const suggestions = [
-    {
-      icon: <Code className="w-5 h-5" />,
-      title: "Code Examples",
-      question: "Show me a React component with hooks",
-      color: "from-blue-500 to-blue-600"
-    },
-    {
-      icon: <BookOpen className="w-5 h-5" />,
-      title: "Career Guidance",
-      question: "How do I transition into tech from a non-tech background?",
-      color: "from-green-500 to-green-600"
-    },
-    {
-      icon: <Users className="w-5 h-5" />,
-      title: "JavaScript Help",
-      question: "Explain async/await with code examples",
-      color: "from-purple-500 to-purple-600"
-    },
-    {
-      icon: <Zap className="w-5 h-5" />,
-      title: "Node.js API",
-      question: "Create a REST API with Express.js",
-      color: "from-orange-500 to-orange-600"
+interface WelcomeMessageProps {
+  currentPersona: PersonaId;
+}
+
+const WelcomeMessage = ({ currentPersona }: WelcomeMessageProps) => {
+  const persona = getPersonaById(currentPersona);
+
+  if (!persona) return null;
+  const getSuggestions = () => {
+    if (persona.id === 'hitesh') {
+      return [
+        {
+          icon: <Code className="w-5 h-5" />,
+          title: "Code Examples",
+          question: "Show me a React component with hooks",
+          color: "from-blue-500 to-blue-600"
+        },
+        {
+          icon: <BookOpen className="w-5 h-5" />,
+          title: "Career Guidance",
+          question: "How do I transition into tech from a non-tech background?",
+          color: "from-green-500 to-green-600"
+        },
+        {
+          icon: <Users className="w-5 h-5" />,
+          title: "JavaScript Help",
+          question: "Explain async/await with code examples",
+          color: "from-purple-500 to-purple-600"
+        },
+        {
+          icon: <Zap className="w-5 h-5" />,
+          title: "Node.js API",
+          question: "Create a REST API with Express.js",
+          color: "from-orange-500 to-orange-600"
+        }
+      ];
+    } else {
+      return [
+        {
+          icon: <Code className="w-5 h-5" />,
+          title: "Full-Stack Project",
+          question: "Build a complete MERN stack application",
+          color: "from-blue-500 to-blue-600"
+        },
+        {
+          icon: <BookOpen className="w-5 h-5" />,
+          title: "System Design",
+          question: "How to design a scalable web application?",
+          color: "from-green-500 to-green-600"
+        },
+        {
+          icon: <Users className="w-5 h-5" />,
+          title: "Modern JavaScript",
+          question: "Latest ES6+ features and best practices",
+          color: "from-purple-500 to-purple-600"
+        },
+        {
+          icon: <Zap className="w-5 h-5" />,
+          title: "Performance",
+          question: "Optimize React app for better performance",
+          color: "from-orange-500 to-orange-600"
+        }
+      ];
     }
-  ];
+  };
 
-  const stats = [
-    { icon: <Users className="w-4 h-4" />, label: "1.5M+ Students", value: "Worldwide" },
-    { icon: <Youtube className="w-4 h-4" />, label: "720K+ Subscribers", value: "Chai aur Code" },
-    { icon: <Github className="w-4 h-4" />, label: "GitHub Star", value: "47.8K+ Followers" },
-    { icon: <Star className="w-4 h-4" />, label: "599+ Videos", value: "Free Content" }
-  ];
+  const suggestions = getSuggestions();
+
+  const getStats = () => {
+    const stats = [];
+    if (persona.stats.students) stats.push({ icon: <Users className="w-4 h-4" />, label: persona.stats.students, value: "Worldwide" });
+    if (persona.stats.subscribers) stats.push({ icon: <Youtube className="w-4 h-4" />, label: persona.stats.subscribers, value: persona.id === 'hitesh' ? "Chai aur Code" : "Dev Tutorials" });
+    if (persona.stats.followers) stats.push({ icon: <Github className="w-4 h-4" />, label: persona.stats.followers, value: "GitHub" });
+    if (persona.stats.videos) stats.push({ icon: <Star className="w-4 h-4" />, label: persona.stats.videos, value: "Free Content" });
+    return stats;
+  };
+
+  const stats = getStats();
 
   return (
     <div className="max-w-5xl mx-auto p-8 space-y-8">
@@ -46,35 +93,50 @@ const WelcomeMessage = () => {
           <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-transparent to-primary/20 blur-3xl"></div>
           <div className="relative space-y-4">
             <div className="flex items-center justify-center gap-3 mb-4">
-              <Coffee className="w-8 h-8 text-primary animate-bounce" />
+              {persona.id === 'hitesh' ? (
+                <Coffee className="w-8 h-8 text-primary animate-bounce" />
+              ) : (
+                <Code className="w-8 h-8 text-primary animate-bounce" />
+              )}
               <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
-                Namaste Coders!
+                {persona.id === 'hitesh' ? 'Namaste Coders!' : 'Hey Developers!'}
               </h2>
-              <div className="text-4xl animate-wave">🙏</div>
+              <div className="text-4xl animate-wave">
+                {persona.id === 'hitesh' ? '🙏' : '🚀'}
+              </div>
             </div>
-            
+
             <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              I'm <span className="font-semibold text-primary">Hitesh Choudhary</span>, and I'm here to help you with your coding journey. 
-              Whether you're a beginner or looking to level up your skills, let's{" "}
-              <span className="font-semibold text-accent">chai aur code</span> together!
+              I'm <span className="font-semibold text-primary">{persona.displayName}</span>, and I'm here to help you with your coding journey.
+              {persona.id === 'hitesh' ? (
+                <>Whether you're a beginner or looking to level up your skills, let's{" "}
+                  <span className="font-semibold text-accent">chai aur code</span> together!</>
+              ) : (
+                <>Whether you're building your first app or scaling to production, let's{" "}
+                  <span className="font-semibold text-accent">build something amazing</span> together!</>
+              )}
             </p>
           </div>
         </div>
-        
+
         {/* Badges */}
         <div className="flex flex-wrap justify-center gap-3">
-          <Badge variant="secondary" className="px-4 py-2 bg-gradient-to-r from-blue-500/10 to-blue-600/10 border-blue-500/20 text-blue-700 dark:text-blue-300">
-            <Code className="w-4 h-4 mr-2" />
-            MERN Stack Expert
-          </Badge>
+          {persona.expertise.slice(0, 3).map((skill, index) => (
+            <Badge key={index} variant="secondary" className="px-4 py-2 bg-gradient-to-r from-blue-500/10 to-blue-600/10 border-blue-500/20 text-blue-700 dark:text-blue-300">
+              <Code className="w-4 h-4 mr-2" />
+              {skill}
+            </Badge>
+          ))}
           <Badge variant="secondary" className="px-4 py-2 bg-gradient-to-r from-red-500/10 to-red-600/10 border-red-500/20 text-red-700 dark:text-red-300">
             <Youtube className="w-4 h-4 mr-2" />
             YouTube Educator
           </Badge>
-          <Badge variant="secondary" className="px-4 py-2 bg-gradient-to-r from-green-500/10 to-green-600/10 border-green-500/20 text-green-700 dark:text-green-300">
-            <Coffee className="w-4 h-4 mr-2" />
-            ChaiCode Founder
-          </Badge>
+          {persona.id === 'hitesh' && (
+            <Badge variant="secondary" className="px-4 py-2 bg-gradient-to-r from-green-500/10 to-green-600/10 border-green-500/20 text-green-700 dark:text-green-300">
+              <Coffee className="w-4 h-4 mr-2" />
+              ChaiCode Founder
+            </Badge>
+          )}
         </div>
 
         {/* Stats Grid */}

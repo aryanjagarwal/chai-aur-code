@@ -1,9 +1,12 @@
+import { PersonaId } from "./persona";
+
 export interface Message {
   id: string;
   content: string;
   isUser: boolean;
   timestamp: Date;
   sequence: number;
+  personaId?: PersonaId; // Store which persona created this message
 }
 
 export interface ChatState {
