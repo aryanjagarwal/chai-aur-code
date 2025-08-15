@@ -333,7 +333,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 - **GitHub Issues**: [Report bugs or request features](https://github.com/aryanjagarwal/chai-aur-code/issues)
 - **Discussions**: [Community discussions](https://github.com/aryanjagarwal/chai-aur-code/discussions)
-- **Email**: aryanjagarwal@example.com
+- **Email**: ajbaggar@gmail.com
 
 ---
 
